@@ -1,48 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>装备溯源查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .item {
+            margin: 12px 0;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        .item strong {
+            display: inline-block;
+            width: 110px;
+            color: #34495e;
+        }
+        .timeline {
+            margin: 20px 0;
+            padding-left: 20px;
+            border-left: 3px solid #3498db;
+        }
+        .time-item {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .time-item::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            background: #3498db;
+            border-radius: 50%;
+            position: absolute;
+            left: -27px;
+            top: 6px;
+        }
+        .conclusion {
+            background: #e8f5e9;
+            padding: 15px;
+            border-left: 4px solid #2ecc71;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            padding: 30px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>军工装备溯源信息</h1>
+        <div id="result">加载中...</div>
+    </div>
+
 <script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const targetId = parseInt(urlParams.get('id')) || 1;
+// 读取 URL 中的 ID
+const params = new URLSearchParams(window.location.search);
+const id = parseInt(params.get('id')) || 1;
 
-  fetch('./products.json')
-    .then(response => {
-      if (!response.ok) throw new Error("文件加载失败");
-      return response.json();
-    })
-    .then(data => {
-      const weapon = data.find(item => item.id === targetId);
-      if (!weapon) {
-        // 区分“没找到id”和“文件加载失败”
-        document.getElementById('content').innerHTML = `
-          <div class="error">未找到ID为${targetId}的装备信息</div>
-        `;
-        return;
-      }
+// 读取你的 products.json（文件名完全匹配）
+fetch('./products.json')
+  .then(res => {
+    if (!res.ok) throw new Error("文件不存在");
+    return res.json();
+  })
+  .then(list => {
+    const data = list.find(item => item.id === id);
 
-      // 渲染页面（和你之前的代码一样）
-      document.getElementById('content').innerHTML = `
-        <div class="info-item"><strong>装备名称：</strong>${weapon.productName}</div>
-        <div class="info-item"><strong>产品编号：</strong>${weapon.productCode}</div>
-        <div class="info-item"><strong>生产批次：</strong>${weapon.batch}</div>
-        <div class="info-item"><strong>生产基地：</strong>${weapon.origin}</div>
-        <div class="info-item"><strong>生产日期：</strong>${weapon.produceDate}</div>
-        <div class="info-item"><strong>检测结果：</strong>${weapon.testResult}</div>
-        
-        <h3 style="margin:30px 0 15px;color:#1a365d;">物流时间线</h3>
-        <div class="timeline">
-          ${weapon.logisticsTimeline.map(item => `
-            <div class="timeline-item">
-              <strong>${item.time}</strong>
-              <p>${item.content}</p>
-            </div>
-          `).join('')}
-        </div>
-        
-        <h3 style="margin:30px 0 15px;color:#1a365d;">溯源结论</h3>
-        <div class="conclusion">${weapon.traceConclusion}</div>
-      `;
-    })
-    .catch(err => {
-      document.getElementById('content').innerHTML = `
-        <div class="error">数据加载失败，请检查文件路径或JSON格式：${err.message}</div>
-      `;
-    });
+    if (!data) {
+      document.getElementById("result").innerHTML = `<div class="error">未找到 ID：${id}</div>`;
+      return;
+    }
+
+    // 渲染页面
+    document.getElementById("result").innerHTML = `
+      <div class="item"><strong>装备名称：</strong>${data.productName}</div>
+      <div class="item"><strong>产品编号：</strong>${data.productCode}</div>
+      <div class="item"><strong>生产批次：</strong>${data.batch}</div>
+      <div class="item"><strong>产地：</strong>${data.origin}</div>
+      <div class="item"><strong>生产日期：</strong>${data.produceDate}</div>
+      <div class="item"><strong>检测结果：</strong>${data.testResult}</div>
+
+      <h3 style="margin:25px 0 10px;">物流轨迹</h3>
+      <div class="timeline">
+        ${data.logisticsTimeline.map(t => `
+          <div class="time-item">
+            <div>${t.time}</div>
+            <div>${t.content}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <h3 style="margin:25px 0 10px;">溯源结论</h3>
+      <div class="conclusion">${data.traceConclusion}</div>
+    `;
+  })
+  .catch(err => {
+    document.getElementById("result").innerHTML = `<div class="error">加载失败：${err.message}</div>`;
+  });
 </script>
+</body>
+</html>
