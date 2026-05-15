@@ -3,180 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>军工武器二维码溯源系统</title>
+    <title>军工武器溯源信息查询</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft YaHei", sans-serif;
+            font-family: "Microsoft Yahei", sans-serif;
         }
         body {
             background-color: #f0f2f5;
-            padding: 15px;
-            max-width: 600px;
-            margin: 0 auto;
-            color: #333;
+            padding: 20px;
         }
         .container {
-            background: #fff;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
         }
-        .top-title {
+        h1 {
             text-align: center;
-            font-size: 22px;
-            font-weight: bold;
             color: #1a365d;
+            margin-bottom: 30px;
             padding-bottom: 15px;
             border-bottom: 1px solid #eee;
+        }
+        .info-item {
             margin-bottom: 20px;
+            line-height: 1.8;
         }
-        .info-row {
-            display: flex;
-            padding: 12px 0;
-            border-bottom: 1px dashed #e5e7eb;
+        .info-item strong {
+            color: #2d3748;
+            min-width: 120px;
+            display: inline-block;
         }
-        .info-row:last-of-type {
-            border-bottom: none;
-        }
-        .label {
-            width: 110px;
-            color: #64748b;
-            font-weight: 500;
-        }
-        .value {
-            flex: 1;
-            color: #1e293b;
-        }
-        .time-axis {
-            margin: 15px 0;
-            padding-left: 15px;
-            border-left: 2px solid #2563eb;
-        }
-        .axis-item {
-            position: relative;
+        .timeline {
+            margin: 20px 0;
             padding-left: 20px;
-            margin-bottom: 18px;
+            border-left: 2px solid #4299e1;
         }
-        .axis-item::before {
+        .timeline-item {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .timeline-item::before {
             content: '';
+            position: absolute;
+            left: -26px;
+            top: 5px;
             width: 10px;
             height: 10px;
-            background: #2563eb;
             border-radius: 50%;
-            position: absolute;
-            left: -6px;
-            top: 4px;
-        }
-        .axis-time {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-        .axis-text {
-            font-size: 15px;
+            background-color: #4299e1;
         }
         .conclusion {
-            background: #f1f5f9;
+            background-color: #f0fff4;
             padding: 15px;
-            border-radius: 10px;
-            margin-top: 10px;
-            color: #0f172a;
-            line-height: 1.6;
+            border-radius: 8px;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
         }
-        .empty-tip {
+        .error {
             text-align: center;
-            padding: 50px 20px;
-            color: #999;
-            font-size: 16px;
+            color: #718096;
+            padding: 50px 0;
         }
     </style>
 </head>
 <body>
-    <div class="container" id="app">
-        <div class="top-title">军工武器溯源信息查询</div>
-        <div id="content"></div>
+    <div class="container">
+        <h1>军工武器溯源信息查询</h1>
+        <div id="content" class="error">数据加载中...</div>
     </div>
 
     <script>
-        // 获取url中的id参数
-        function getUrlParam(name) {
-            let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
-            let r = window.location.search.substr(1).match(reg);
-            if (r != null) return unescape(r[2]);
-            return null;
-        }
+        // 1. 读取URL参数中的id
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetId = parseInt(urlParams.get('id')) || 1;
 
-        let id = getUrlParam('id');
-        let contentDom = document.getElementById('content');
+        // 2. 读取JSON数据
+        fetch('./data.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('文件加载失败，请检查文件路径');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 3. 查找对应id的装备数据
+                const weapon = data.find(item => item.id === targetId);
+                if (!weapon) {
+                    document.getElementById('content').innerHTML = `
+                        <div class="error">未找到该装备的溯源信息，请检查查询ID</div>
+                    `;
+                    return;
+                }
 
-        // 读取json数据
-        fetch('weapon.json')
-        .then(res => res.json())
-        .then(list => {
-            if(!id) {
-                contentDom.innerHTML = '<div class="empty-tip">请通过二维码扫码访问</div>';
-                return;
-            }
-            // 根据id查找对应导弹信息
-            let weapon = list.find(item => item.id == id);
-            if(!weapon) {
-                contentDom.innerHTML = '<div class="empty-tip">未查询到该武器溯源信息</div>';
-                return;
-            }
-
-            // 组装时间轴HTML
-            let timelineHtml = '';
-            weapon.logisticsTimeline.forEach(item => {
-                timelineHtml += `
-                    <div class="axis-item">
-                        <div class="axis-time">${item.time}</div>
-                        <div class="axis-text">${item.content}</div>
+                // 4. 渲染页面
+                document.getElementById('content').innerHTML = `
+                    <div class="info-item"><strong>装备名称：</strong>${weapon.productName}</div>
+                    <div class="info-item"><strong>产品编号：</strong>${weapon.productCode}</div>
+                    <div class="info-item"><strong>生产批次：</strong>${weapon.batch}</div>
+                    <div class="info-item"><strong>生产基地：</strong>${weapon.origin}</div>
+                    <div class="info-item"><strong>生产日期：</strong>${weapon.produceDate}</div>
+                    <div class="info-item"><strong>检测结果：</strong>${weapon.testResult}</div>
+                    
+                    <h3 style="margin: 30px 0 15px; color: #1a365d;">物流时间线</h3>
+                    <div class="timeline">
+                        ${weapon.logisticsTimeline.map(item => `
+                            <div class="timeline-item">
+                                <strong>${item.time}</strong>
+                                <p>${item.content}</p>
+                            </div>
+                        `).join('')}
                     </div>
+                    
+                    <h3 style="margin: 30px 0 15px; color: #1a365d;">溯源结论</h3>
+                    <div class="conclusion">${weapon.traceConclusion}</div>
+                `;
+            })
+            .catch(error => {
+                console.error('加载错误：', error);
+                document.getElementById('content').innerHTML = `
+                    <div class="error">数据加载失败，请检查文件路径或网络连接</div>
                 `;
             });
-
-            // 渲染页面
-            contentDom.innerHTML = `
-                <div class="info-row">
-                    <div class="label">武器名称</div>
-                    <div class="value">${weapon.productName}</div>
-                </div>
-                <div class="info-row">
-                    <div class="label">产品编号</div>
-                    <div class="value">${weapon.productCode}</div>
-                </div>
-                <div class="info-row">
-                    <div class="label">生产批次</div>
-                    <div class="value">${weapon.batch}</div>
-                </div>
-                <div class="info-row">
-                    <div class="label">生产产地</div>
-                    <div class="value">${weapon.origin}</div>
-                </div>
-                <div class="info-row">
-                    <div class="label">生产日期</div>
-                    <div class="value">${weapon.produceDate}</div>
-                </div>
-                <div class="info-row">
-                    <div class="label">检测结果</div>
-                    <div class="value">${weapon.testResult}</div>
-                </div>
-
-                <div style="margin:20px 0 10px;font-weight:bold;color:#1a365d;">物流溯源时间轴</div>
-                <div class="time-axis">
-                    ${timelineHtml}
-                </div>
-
-                <div style="margin:20px 0 10px;font-weight:bold;color:#1a365d;">溯源结论</div>
-                <div class="conclusion">${weapon.traceConclusion}</div>
-            `;
-        })
-        .catch(err => {
-            contentDom.innerHTML = '<div class="empty-tip">数据加载失败，请检查文件路径</div>';
-        });
     </script>
 </body>
 </html>
