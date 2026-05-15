@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产品溯源系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .info-item {
+            margin: 12px 0;
+            line-height: 1.6;
+        }
+
+        .label {
+            font-weight: bold;
+            width: 90px;
+            display: inline-block;
+            color: #34495e;
+        }
+
+        .timeline {
+            border-left: 2px solid #eee;
+            padding-left: 15px;
+            margin-left: 5px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .timeline-item::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: #0984e3;
+            border-radius: 50%;
+            position: absolute;
+            left: -20px;
+            top: 6px;
+        }
+
+        .time {
+            font-size: 13px;
+            color: #777;
+        }
+
+        .conclusion {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            padding: 30px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="title">产品溯源信息</div>
+        <div id="content">加载中...</div>
+    </div>
+
+    <script>
+        function getUrlId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        async function loadData() {
+            const content = document.getElementById('content');
+            const id = getUrlId();
+
+            if (!id) {
+                content.innerHTML = '<div class="error">错误：未获取到溯源ID</div>';
+                return;
+            }
+
+            try {
+                const res = await fetch('products.json');
+                const products = await res.json();
+                const product = products.find(item => item.id == id);
+
+                if (!product) {
+                    content.innerHTML = `<div class="error">未找到 ID：${id} 的产品</div>`;
+                    return;
+                }
+
+                let timeline = '';
+                product.logistics.forEach(item => {
+                    timeline += `
+                    <div class="timeline-item">
+                        <div class="time">${item.time}</div>
+                        <div>${item.status}</div>
+                    </div>`;
+                });
+
+                content.innerHTML = `
+                    <div class="info-item">
+                        <span class="label">产品名称：</span>${product.name}
+                    </div>
+                    <div class="info-item">
+                        <span class="label">产品编号：</span>${product.productCode}
+                    </div>
+                    <div class="info-item">
+                        <span class="label">生产批次：</span>${product.batch}
+                    </div>
+                    <div class="info-item">
+                        <span class="label">产地：</span>${product.origin}
+                    </div>
+                    <div class="info-item">
+                        <span class="label">生产日期：</span>${product.productionDate}
+                    </div>
+                    <div class="info-item">
+                        <span class="label">检测结果：</span>${product.testResult}
+                    </div>
+                    <div class="info-item">
+                        <span class="label">物流轨迹：</span>
+                        <div class="timeline">${timeline}</div>
+                    </div>
+                    <div class="conclusion">${product.conclusion}</div>
+                `;
+
+            } catch (e) {
+                content.innerHTML = '<div class="error">数据加载失败</div>';
+                console.error(e);
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
