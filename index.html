@@ -78,25 +78,21 @@
     </div>
 
 <script>
-// 读取 URL 中的 ID
 const params = new URLSearchParams(window.location.search);
 const id = parseInt(params.get('id')) || 1;
 
-// 读取你的 products.json（文件名完全匹配）
 fetch('./products.json')
   .then(res => {
-    if (!res.ok) throw new Error("文件不存在");
+    if (!res.ok) throw new Error("文件加载失败");
     return res.json();
   })
   .then(list => {
     const data = list.find(item => item.id === id);
-
     if (!data) {
       document.getElementById("result").innerHTML = `<div class="error">未找到 ID：${id}</div>`;
       return;
     }
 
-    // 渲染页面
     document.getElementById("result").innerHTML = `
       <div class="item"><strong>装备名称：</strong>${data.productName}</div>
       <div class="item"><strong>产品编号：</strong>${data.productCode}</div>
@@ -120,7 +116,7 @@ fetch('./products.json')
     `;
   })
   .catch(err => {
-    document.getElementById("result").innerHTML = `<div class="error">加载失败：${err.message}</div>`;
+    document.getElementById("result").innerHTML = `<div class="error">错误：${err.message}</div>`;
   });
 </script>
 </body>
