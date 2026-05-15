@@ -109,7 +109,7 @@
 
     <script>
         // 1. 获取URL中的id参数
-        function getUrlId() {
+        function getUrlParamId() {
             const params = new URLSearchParams(window.location.search);
             return params.get('id');
         }
@@ -117,11 +117,11 @@
         // 2. 加载JSON数据并渲染页面
         async function loadData() {
             const content = document.getElementById('content');
-            const id = getUrlId();
+            const id = getUrlParamId();
 
             // 无id参数判断
             if (!id) {
-                content.innerHTML = `<div class="error">错误：未获取到溯源ID</div>`;
+                content.innerHTML = '<div class="error">错误：未获取到溯源ID</div>';
                 return;
             }
 
@@ -142,10 +142,10 @@
                 let timelineHtml = '';
                 product.logistics.forEach(item => {
                     timelineHtml += `
-                        <div class="timeline-item">
-                            <div class="time">${item.time}</div>
-                            <div class="status">${item.status}</div>
-                        </div>
+                    <div class="timeline-item">
+                        <div class="time">${item.time}</div>
+                        <div class="status">${item.status}</div>
+                    </div>
                     `;
                 });
 
@@ -173,13 +173,11 @@
                         <span class="label">物流轨迹：</span>
                         <div class="timeline">${timelineHtml}</div>
                     </div>
-                    <div class="conclusion">
-                        溯源结论：${product.conclusion}
-                    </div>
+                    <div class="conclusion">溯源结论：${product.conclusion}</div>
                 `;
 
             } catch (err) {
-                content.innerHTML = `<div class="error">数据加载失败，请检查文件</div>`;
+                content.innerHTML = '<div class="error">数据加载失败，请检查文件</div>';
                 console.error(err);
             }
         }
