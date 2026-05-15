@@ -84,7 +84,7 @@
         const targetId = parseInt(urlParams.get('id')) || 1;
 
         // 2. 读取JSON数据
-        fetch('./data.json')
+        fetch('./products.json')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('文件加载失败，请检查文件路径');
